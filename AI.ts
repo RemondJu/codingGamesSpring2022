@@ -155,48 +155,58 @@ while (true) {
   }
   const startingPositions = [
     { x: game.me.basePosX > 0 ? 12700 : 4800, y: game.me.basePosY > 0 ? 4900 : 4000},
-    { x: game.me.basePosX > 0 ? 11700 : 6200, y: game.me.basePosY > 0 ? 6900 : 1300},
+    { x: game.me.basePosX > 0 ? 11100 : 6200, y: game.me.basePosY > 0 ? 7400 : 1300},
     { x: game.me.basePosX > 0 ? 15750 : 1750, y: game.me.basePosY > 0 ? 3150 : 6000}
   ];
   let heroesSpacing = -250;
-  let myHeroes = game.entities.filter(entity => entity.type === entity.TYPE_MY_HERO);
+  let myHeroes = game.entities.filter(entity => entity.type === entity.TYPE_MY_HERO).sort((a, b) => a.id - b.id);
+  let allMonsters = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER);
   let hasCastWindSpell = false;
   let hasCastControlSpell = false;
+  let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase() && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
   myHeroes.forEach((hero, i) => {
-    let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
+    let closestMonstersFromHero = allMonsters.length ? allMonsters.sort((a, b) => a.getDistanceFrom(hero.x, hero.y) - b.getDistanceFrom(hero.x, hero.y)) : [];
     if (monstersByDanger.length) {
       if (monstersByDanger[0].distanceFromMyBase < 5000 && monstersByDanger[0].isDangerousForMyBase) {
         let closestHero = myHeroes.sort((a, b) => a.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) - b.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y))[0];
-        if (game.me.canCast && closestHero.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) < 1000 && !hasCastWindSpell && hero.id === closestHero.id && monstersByDanger[0].distanceFromMyBase < 3000) {
+        if (game.me.canCast() && closestHero.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) < 1000 && !hasCastWindSpell && hero.id === closestHero.id) {
           console.log(game.castWindSpell(game.enemy.basePosX, game.enemy.basePosY));
           hasCastWindSpell = true;
-        } else if (game.me.canCast && closestHero.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) < 2200 && monstersByDanger[0].distanceFromMyBase >= 4000 && !hasCastControlSpell && hero.id === closestHero.id) {
-          console.log(game.castControlSpell(monstersByDanger[0].id, game.enemy.basePosX, game.enemy.basePosY));
-          hasCastControlSpell = true;
         } else {
           // Sending all heroes on really close to base monster
           console.log(game.moveTo(i, monstersByDanger[0].x + heroesSpacing, monstersByDanger[0].y + heroesSpacing));
         }
         heroesSpacing += 250;
       } else if (monstersByDanger.length < 3) {
-        // Sending hero to first monster in sight or wait till monster is in sight
-        let closestMonsterIndex = monstersByDanger.length >= heroesPerPlayer ? i : monstersByDanger.length - 1;  
-        if (myHeroes[i].getDistanceFrom(monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y) < 2200) {
-          if (game.me.canCast && !hasCastControlSpell && monstersByDanger[closestMonsterIndex].distanceFromMyBase > 7500 && !monstersByDanger[closestMonsterIndex].isControlled) {
-            console.log(game.castControlSpell(monstersByDanger[closestMonsterIndex].id, game.enemy.basePosX, game.enemy.basePosY));
+        // Sending hero to first monster in sight or move to starting postion till monster gets in sight
+        if (closestMonstersFromHero.length && hero.getDistanceFrom(startingPositions[i].x, startingPositions[i].y) < 2200 && closestMonstersFromHero[0].getDistanceFrom(hero.x, hero.y) < 2000) {
+          if (game.me.canCast() && !hasCastControlSpell && !closestMonstersFromHero[0].isControlled) {
+            console.log(game.castControlSpell(closestMonstersFromHero[0].id, game.enemy.basePosX, game.enemy.basePosY));
             hasCastControlSpell = true;
           } else {
-            console.log(game.moveTo(i, monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y));
+            console.log(game.moveTo(i, closestMonstersFromHero[0].x, closestMonstersFromHero[0].y));
           }
         } else {
           console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
         }
       } else {
-        // Sending each hero on the three closest monsters in sight
+        // Sending each hero on the three closest dangerous monsters in sight
         console.log(game.moveTo(i, monstersByDanger[i].x, monstersByDanger[i].y));
+      }
+    } else if (closestMonstersFromHero.length) {
+      if (closestMonstersFromHero.length && hero.getDistanceFrom(startingPositions[i].x, startingPositions[i].y) < 2200 && closestMonstersFromHero[0].getDistanceFrom(hero.x, hero.y) < 2000) {
+        if (game.me.canCast() && !hasCastControlSpell && !closestMonstersFromHero[0].isControlled) {
+          console.log(game.castControlSpell(closestMonstersFromHero[0].id, game.enemy.basePosX, game.enemy.basePosY));
+          hasCastControlSpell = true;
+        } else {
+          console.log(game.moveTo(i, closestMonstersFromHero[0].x, closestMonstersFromHero[0].y));
+        }
+      } else {
+        console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
       }
     } else {
       // Dispatching heroes on strategic starting positions
+      console.error('starting');
       console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
     }
   })

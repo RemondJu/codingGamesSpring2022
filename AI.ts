@@ -155,25 +155,25 @@ while (true) {
     { x: game.me.basePosX > 0 ? 11700 : 6200, y: game.me.basePosY > 0 ? 6900 : 1300},
     { x: game.me.basePosX > 0 ? 15750 : 1750, y: game.me.basePosY > 0 ? 3150 : 6000}
   ];
-  let emergencyDistanceSpace = -250;
+  let heroesSpacing = -250;
   for (let i = 0; i < heroesPerPlayer; i++) {
-      let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
-      if (monstersByDanger.length) {
-        if (monstersByDanger[0].distanceFromMyBase < 5000) {
-            // Sending all heroes on really close to base monster
-            console.log(game.moveTo(i, monstersByDanger[0].x + emergencyDistanceSpace, monstersByDanger[0].y + emergencyDistanceSpace));
-            emergencyDistanceSpace += 250;
-          } else if (monstersByDanger.length < 3) {
-            // Sending all heroes to first monsters in sight
-            let closestMonsterIndex = monstersByDanger.length >= heroesPerPlayer ? i : monstersByDanger.length - 1;  
-            console.log(game.moveTo(i, monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y));
-          } else {
-            // Sending each hero on the three closest monsters in sight
-            console.log(game.moveTo(i, monstersByDanger[i].x, monstersByDanger[i].y));
-          }
+    let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
+    if (monstersByDanger.length) {
+      if (monstersByDanger[0].distanceFromMyBase < 5000) {
+        // Sending all heroes on really close to base monster
+        console.log(game.moveTo(i, monstersByDanger[0].x + heroesSpacing, monstersByDanger[0].y + heroesSpacing));
+        heroesSpacing += 250;
+      } else if (monstersByDanger.length < 3) {
+        // Sending all heroes to first monsters in sight
+        let closestMonsterIndex = monstersByDanger.length >= heroesPerPlayer ? i : monstersByDanger.length - 1;  
+        console.log(game.moveTo(i, monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y));
       } else {
-          // Dispatching heroes on strategic starting positions
-          console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+        // Sending each hero on the three closest monsters in sight
+        console.log(game.moveTo(i, monstersByDanger[i].x, monstersByDanger[i].y));
       }
+    } else {
+      // Dispatching heroes on strategic starting positions
+      console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+    }
   }
 }

@@ -157,18 +157,22 @@ while (true) {
   ];
   let emergencyDistanceSpace = -250;
   for (let i = 0; i < heroesPerPlayer; i++) {
-      let closestMonsters = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
-      if (closestMonsters.length) {
-          if (closestMonsters[0].distanceFromMyBase < 5000) {
-            console.log(game.moveTo(i, closestMonsters[0].x + emergencyDistanceSpace, closestMonsters[0].y + emergencyDistanceSpace));
+      let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
+      if (monstersByDanger.length) {
+        if (monstersByDanger[0].distanceFromMyBase < 5000) {
+            // Sending all heroes on really close to base monster
+            console.log(game.moveTo(i, monstersByDanger[0].x + emergencyDistanceSpace, monstersByDanger[0].y + emergencyDistanceSpace));
             emergencyDistanceSpace += 250;
-          } else if (closestMonsters.length < 3) {
-            let closestMonsterIndex = closestMonsters.length >= heroesPerPlayer ? i : closestMonsters.length - 1;  
-            console.log(game.moveTo(i, closestMonsters[closestMonsterIndex].x, closestMonsters[closestMonsterIndex].y));
+          } else if (monstersByDanger.length < 3) {
+            // Sending all heroes to first monsters in sight
+            let closestMonsterIndex = monstersByDanger.length >= heroesPerPlayer ? i : monstersByDanger.length - 1;  
+            console.log(game.moveTo(i, monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y));
           } else {
-            console.log(game.moveTo(i, closestMonsters[i].x, closestMonsters[i].y));
+            // Sending each hero on the three closest monsters in sight
+            console.log(game.moveTo(i, monstersByDanger[i].x, monstersByDanger[i].y));
           }
       } else {
+          // Dispatching heroes on strategic starting positions
           console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
       }
   }

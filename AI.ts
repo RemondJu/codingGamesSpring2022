@@ -27,6 +27,9 @@ class Entity {
   isDangerousForMyBase = (): boolean => {
     return this.threatFor === this.MY_BASE;
   };
+  isDangerousForEnnemyBase = (): boolean => {
+    return this.threatFor === this.OTHER_BASE;
+  };
   getDistanceFrom = (x: number, y: number): number => {
     return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2));
   };
@@ -99,7 +102,7 @@ class Game {
   };
 
   castWindSpell = (x: number, y: number): string => {
-    return `${this.ACTION_SPELL} ${this.SPELL_WIND} ${x} ${y}`;
+    return `${this.ACTION_SPELL} ${this.SPELL_WIND} ${x} ${y} HADOUKEN!`;
   }
 
   castShieldSpell = (id: number): string => {
@@ -172,9 +175,13 @@ while (true) {
         }
         heroesSpacing += 250;
       } else if (monstersByDanger.length < 3) {
-        // Sending all heroes to first monsters in sight
+        // Sending hero to first monster in sight or wait till monster is in sight
         let closestMonsterIndex = monstersByDanger.length >= heroesPerPlayer ? i : monstersByDanger.length - 1;  
-        console.log(game.moveTo(i, monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y));
+        if (myHeroes[i].getDistanceFrom(monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y) < 2200) {
+          console.log(game.moveTo(i, monstersByDanger[closestMonsterIndex].x, monstersByDanger[closestMonsterIndex].y));
+        } else {
+          console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+        }
       } else {
         // Sending each hero on the three closest monsters in sight
         console.log(game.moveTo(i, monstersByDanger[i].x, monstersByDanger[i].y));

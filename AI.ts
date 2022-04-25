@@ -156,12 +156,20 @@ while (true) {
     { x: game.me.basePosX > 0 ? 15750 : 1750, y: game.me.basePosY > 0 ? 3150 : 6000}
   ];
   let heroesSpacing = -250;
+  let myHeroes = game.entities.filter(entity => entity.type === entity.TYPE_MY_HERO);
+  let hasCastSpell = false;
   for (let i = 0; i < heroesPerPlayer; i++) {
     let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
     if (monstersByDanger.length) {
       if (monstersByDanger[0].distanceFromMyBase < 5000) {
-        // Sending all heroes on really close to base monster
-        console.log(game.moveTo(i, monstersByDanger[0].x + heroesSpacing, monstersByDanger[0].y + heroesSpacing));
+        let closestHero = myHeroes.sort((a, b) => a.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) - b.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y))[0];
+        if (game.me.canCast && closestHero.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) < 1000 && !hasCastSpell) {
+          console.log(game.castWindSpell(game.enemy.basePosX, game.enemy.basePosY));
+          hasCastSpell = true;
+        } else {
+          // Sending all heroes on really close to base monster
+          console.log(game.moveTo(i, monstersByDanger[0].x + heroesSpacing, monstersByDanger[0].y + heroesSpacing));
+        }
         heroesSpacing += 250;
       } else if (monstersByDanger.length < 3) {
         // Sending all heroes to first monsters in sight

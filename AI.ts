@@ -92,7 +92,7 @@ class Game {
     this.entities.push(entity);
   };
 
-  moveTo = (hero: number, x: number, y: number): string => {
+  moveTo = (x: number, y: number): string => {
     return `${this.ACTION_MOVE} ${x} ${y}`
 
   };
@@ -111,6 +111,13 @@ class Game {
 
   castControlSpell = (id: number, x: number, y: number): string => {
     return `${this.ACTION_SPELL} ${this.SPELL_CONTROL} ${id} ${x} ${y}`;
+  }
+
+  chaseOrMoveToStartingPosition = (closestToHeroNeutralMonsters, heroStartingPositions) => {
+    if (closestToHeroNeutralMonsters.length) {
+      return game.moveTo(closestToHeroNeutralMonsters[0].x, closestToHeroNeutralMonsters[0].y);
+    }
+    return game.moveTo(heroStartingPositions.x, heroStartingPositions.y);
   }
 
   debug = (message: string, ...rest) => {
@@ -177,7 +184,7 @@ while (true) {
           hasCastWindSpell = true;
         } else {
           // Sending all heroes on really close to base monster
-          console.log(game.moveTo(i, monstersByDanger[0].x + heroesSpacing, monstersByDanger[0].y + heroesSpacing));
+          console.log(game.moveTo(monstersByDanger[0].x + heroesSpacing, monstersByDanger[0].y + heroesSpacing));
         }
         heroesSpacing += 250;
       } else if (monstersByDanger.length < 3) {
@@ -187,18 +194,14 @@ while (true) {
             console.log(game.castControlSpell(closestMonstersFromHero[0].id, game.enemy.basePosX, game.enemy.basePosY));
             hasCastControlSpell = true;
           } else {
-            if (closestNeutralMonsters.length) {
-              console.log(game.moveTo(i, closestNeutralMonsters[0].x, closestNeutralMonsters[0].y));
-            } else {
-              console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
-            }
+            console.log(game.chaseOrMoveToStartingPosition(closestNeutralMonsters, startingPositions[i]));
           }
         } else {
-          console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+          console.log(game.moveTo(startingPositions[i].x, startingPositions[i].y));
         }
       } else {
         // Sending each hero on the three closest dangerous monsters in sight
-        console.log(game.moveTo(i, monstersByDanger[i].x, monstersByDanger[i].y));
+        console.log(game.moveTo(monstersByDanger[i].x, monstersByDanger[i].y));
       }
     // Behavior when no dangerous monsters are spotted, but some are close to heroes
     } else if (closestMonstersFromHero.length) {
@@ -214,26 +217,18 @@ while (true) {
             hasCastShieldSpell = true;
           // Chasing closest uncontrolled monster or returning to starting position
           } else {
-            if (closestNeutralMonsters.length) {
-              console.log(game.moveTo(i, closestNeutralMonsters[0].x, closestNeutralMonsters[0].y));
-            } else {
-              console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
-            }
+            console.log(game.chaseOrMoveToStartingPosition(closestNeutralMonsters, startingPositions[i]));
           }
         } else {
-          if (closestNeutralMonsters.length) {
-            console.log(game.moveTo(i, closestNeutralMonsters[0].x, closestNeutralMonsters[0].y));
-          } else {
-            console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
-          }
+          console.log(game.chaseOrMoveToStartingPosition(closestNeutralMonsters, startingPositions[i]));
         }
       } else {
         // Returning heroes to strategic starting positions
-        console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+        console.log(game.moveTo(startingPositions[i].x, startingPositions[i].y));
       }
     } else {
       // Dispatching heroes to strategic starting positions
-      console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+      console.log(game.moveTo(startingPositions[i].x, startingPositions[i].y));
     }
   })
 }

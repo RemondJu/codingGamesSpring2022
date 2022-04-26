@@ -167,11 +167,12 @@ while (true) {
   let monstersByDanger = game.entities.filter(entity => entity.type === entity.TYPE_MONSTER && entity.isDangerousForMyBase() && entity.distanceFromMyBase < 10000).sort((a, b) => a.distanceFromMyBase - b.distanceFromMyBase);
   myHeroes.forEach((hero, i) => {
     let closestMonstersFromHero = allMonsters.length ? allMonsters.sort((a, b) => a.getDistanceFrom(hero.x, hero.y) - b.getDistanceFrom(hero.x, hero.y)) : [];
+    let closestNeutralMonsters = closestMonstersFromHero.filter(monster => !monster.isControlled);
     // Behavior when dangerous monsters are spotted
     if (monstersByDanger.length) {
       if (monstersByDanger[0].distanceFromMyBase < 5000 && monstersByDanger[0].isDangerousForMyBase) {
         let closestHero = myHeroes.sort((a, b) => a.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) - b.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y))[0];
-        if (game.me.canCast() && closestHero.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) < 1000 && !hasCastWindSpell && hero.id === closestHero.id) {
+        if (game.me.canCast() && closestHero.getDistanceFrom(monstersByDanger[0].x, monstersByDanger[0].y) < 1280 && !hasCastWindSpell && hero.id === closestHero.id) {
           console.log(game.castWindSpell(game.enemy.basePosX, game.enemy.basePosY));
           hasCastWindSpell = true;
         } else {
@@ -186,7 +187,11 @@ while (true) {
             console.log(game.castControlSpell(closestMonstersFromHero[0].id, game.enemy.basePosX, game.enemy.basePosY));
             hasCastControlSpell = true;
           } else {
-            console.log(game.moveTo(i, closestMonstersFromHero[0].x, closestMonstersFromHero[0].y));
+            if (closestNeutralMonsters.length) {
+              console.log(game.moveTo(i, closestNeutralMonsters[0].x, closestNeutralMonsters[0].y));
+            } else {
+              console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
+            }
           }
         } else {
           console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
@@ -209,17 +214,15 @@ while (true) {
             hasCastShieldSpell = true;
           // Chasing closest uncontrolled monster or returning to starting position
           } else {
-            let closestNeutralMonster = closestMonstersFromHero.filter(monster => !monster.isControlled);
-            if (closestNeutralMonster.length) {
-              console.log(game.moveTo(i, closestNeutralMonster[0].x, closestNeutralMonster[0].y));
+            if (closestNeutralMonsters.length) {
+              console.log(game.moveTo(i, closestNeutralMonsters[0].x, closestNeutralMonsters[0].y));
             } else {
               console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
             }
           }
         } else {
-          let closestNeutralMonster = closestMonstersFromHero.filter(monster => !monster.isControlled);
-          if (closestNeutralMonster.length) {
-            console.log(game.moveTo(i, closestNeutralMonster[0].x, closestNeutralMonster[0].y));
+          if (closestNeutralMonsters.length) {
+            console.log(game.moveTo(i, closestNeutralMonsters[0].x, closestNeutralMonsters[0].y));
           } else {
             console.log(game.moveTo(i, startingPositions[i].x, startingPositions[i].y));
           }
